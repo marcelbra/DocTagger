@@ -1,0 +1,12 @@
+{
+  "cd_dir" : "/home/marcel/Desktop/transformers-master/examples/token-classification",
+  "pretrained_dir" : "/home/marcel/Desktop/transformers-master/examples/token-classification/biobert_v1.1_pubmed",
+  "cache_dir" : "/home/marcel/Desktop/transformers-master/examples/token-classification/BioBERT_ner/data",
+  "config_dir" : "/home/marcel/Desktop/transformers-master/examples/token-classification/biobert_v1.1_pubmed/config.json",
+  "model_dir" : "/home/marcel/Desktop/transformers-master/examples/token-classification/BioBERT_ner/output_3/pytorch_model.bin",
+  "data_dir" : "/home/marcel/Desktop/transformers-master/examples/token-classification/BioBERT_ner/pred_data",
+  "labels_dir" : "/home/marcel/Desktop/transformers-master/examples/token-classification/BioBERT_ner/data/labels.txt",
+  "output_dir" : "/home/marcel/Desktop/transformers-master/examples/token-classification/BioBERT_ner",
+  "path" : "/home/marcel/Desktop/transformers-master/examples/token-classification/CORD-19-research-challenge/document_parses/test_collection",
+  "save_path" : "/home/marcel/Desktop/transformers-master/examples/token-classification/saved_paths"
+}

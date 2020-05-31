@@ -2,18 +2,37 @@ import json
 import nltk
 import spacy
 from pred_ner import Predictor
+from typing import Dict, Any, List, Optional
 
 class DocBuilder:
 
-    def __init__(self, tokenizer, splitter, trainer, _id: int, mode="tokenized"):
+    def __init__(self,
+                 tokenizer,
+                 trainer,
+                 _id: int,
+                 spacy_dir: str,
+                 save_path_dir: str,
+                 mode: str="tokenized"
+                 ):
+        """
+        Formats a given document (passed by path to get_doc).
+        Extracts the abstract and text passages of CORD-19 dataset.
+        Retrieves the BioNER tags of a document in tag_document.
+
+        :param tokenizer: The BERT word tokenizer to be passed to the predictor
+        :param trainer: The huggingface trainer used for inference to be passed to the predictor
+        :param _id: The ID of this process to save progress accordingly
+        :param mode: The mode we expect our DocBuilder to format the data
+        """
         self.sent_tokenizer = nltk.sent_tokenize
-        self.word_tokenizer = spacy.load("/home/marcel/Desktop/transformers-master/examples/token-classification/en_core_sci_md-0.2.4/en_core_sci_md/en_core_sci_md-0.2.4")
-        self.pred = Predictor(tokenizer, splitter, trainer)
+        self.word_tokenizer = spacy.load(spacy_dir)
+        self.pred = Predictor(tokenizer, trainer)
         self._id = _id
         self.mode = mode
-        self.save_path = f"/home/marcel/Desktop/transformers-master/examples/token-classification/saved_paths/saved_{self._id}"
+        self.save_path = save_path_dir + str(self._id)
 
     def get_saved_point(self):
+        """Loads progress of current DocBuilder."""
         try:
             with open(self.save_path, 'r', encoding="utf-8") as file:
                 return int(file.readline())
@@ -22,12 +41,20 @@ class DocBuilder:
             return 0
 
     def save(self, i: int):
+        """Saves progress of current DocBuilder progress."""
         with open(self.save_path, 'w', encoding="utf-8") as file:
             file.write(str(i))
         return i
 
 
-    def get_doc(self, path):
+    def get_doc(self, path: str) -> (Dict[str: Any],
+                                     Dict[str: Any]
+                                     ):
+        """
+        Annotates a given document (path).
+        :param path: The path to file
+        :return: The tuple of old data and new data
+        """
         with open(path) as file:
             data = json.load(file)
             tok_abs = self.get_abstract_of(data)
@@ -47,28 +74,46 @@ class DocBuilder:
             return data, doc
 
     @staticmethod
-    def count_tags(tgd_doc):
+    def count_tags(tgd_doc: List[List[str]]) -> int:
+        """Counts how many gene tags are in a tagged list."""
         return sum([x.count("B") for x in tgd_doc])
 
     @staticmethod
-    def count_words(tok_abs, tok_txt):
+    def count_words(tok_abs: List[List[str]],
+                    tok_txt: List[List[str]]
+                    ) -> int:
+        """Counts how many gene tags are in a tagged list."""
         return sum(map(len, tok_abs + tok_txt))
 
     @staticmethod
-    def calc_ratio(amt_tags: int, amt_words: int):
+    def calc_ratio(amt_tags: int, amt_words: int) -> float:
+        """Calculates the percentage of genetags in a document."""
         return float(amt_tags/amt_words)
 
     @staticmethod
-    def write_doc(path: str, data, doc):
+    def write_doc(path: str,
+                  data: Dict[str: Any],
+                  doc: Dict[str: Any]
+                  ):
+        """Concatenates original data and new data and writes to file."""
         with open(path, 'w', encoding="utf-8") as f:
             json.dump({**data, **doc}, f)
 
-    def tag_document(self, tok_abs, tok_txt):
+    def tag_document(self,
+                     tok_abs: List[List[str]],
+                     tok_txt: List[List[str]]
+                     ) -> List[List[str]]:
+        """Sets the data, predicts and returns list of tags.
+        The structure of the tag list corresponds 1-to-1 to the structure
+        of the concatenated tokenized abstract and text.
+        """
         self.pred.set_data(tok_abs + tok_txt)
         tags = self.pred.predict()
         return tags
 
-    def get_text_of(self, data):
+    def get_text_of(self, data: Dict[str: Any]
+                    ) -> Optional[str, List[str], List[List[str]]]:
+        """Formats the text of a CORD-19 JSON"""
 
         # raw text string
         ps = [p["text"] for p in data["body_text"]]
@@ -87,8 +132,10 @@ class DocBuilder:
         if self.mode == "tokenized":
             return tokenized
 
-    def get_abstract_of(self, data):
-        """Expects a document path and returns a list of list of words."""
+    def get_abstract_of(self, data: Dict[str: Any]
+                        ) -> Optional[str, List[str], List[List[str]]]:
+        """Formats the abstract of a CORD-19 JSON"""
+
         raw_abst = data["abstract"]
         abstract = [raw_abst[i]["text"] for i, _ in enumerate(raw_abst)]
         if len(abstract) == 0: return []  # some have no abstract
