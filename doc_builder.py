@@ -3,17 +3,31 @@ import nltk
 import spacy
 from pred_ner import Predictor
 
-
 class DocBuilder:
 
-    def __init__(self, tokenizer, splitter, trainer, mode="tokenized"):
-        path = "/home/marcel/Desktop/transformers-master/examples/token-classification/en_core_sci_md-0.2.4/en_core_sci_md/en_core_sci_md-0.2.4"
-        self.word_tokenizer = spacy.load(path)
+    def __init__(self, tokenizer, splitter, trainer, _id: int, mode="tokenized"):
         self.sent_tokenizer = nltk.sent_tokenize
+        self.word_tokenizer = spacy.load("/home/marcel/Desktop/transformers-master/examples/token-classification/en_core_sci_md-0.2.4/en_core_sci_md/en_core_sci_md-0.2.4")
         self.pred = Predictor(tokenizer, splitter, trainer)
+        self._id = _id
         self.mode = mode
+        self.save_path = f"/home/marcel/Desktop/transformers-master/examples/token-classification/saved_paths/saved_{self._id}"
 
-    def get_doc(self, path: str):
+    def get_saved_point(self):
+        try:
+            with open(self.save_path, 'r', encoding="utf-8") as file:
+                return int(file.readline())
+        except FileNotFoundError:
+            self.save(0)
+            return 0
+
+    def save(self, i: int):
+        with open(self.save_path, 'w', encoding="utf-8") as file:
+            file.write(str(i))
+        return i
+
+
+    def get_doc(self, path):
         with open(path) as file:
             data = json.load(file)
             tok_abs = self.get_abstract_of(data)
@@ -42,17 +56,18 @@ class DocBuilder:
 
     @staticmethod
     def calc_ratio(amt_tags: int, amt_words: int):
-        return float(amt_tags/amt_words)        
+        return float(amt_tags/amt_words)
+
+    @staticmethod
+    def write_doc(path: str, data, doc):
+        with open(path, 'w', encoding="utf-8") as f:
+            json.dump({**data, **doc}, f)
 
     def tag_document(self, tok_abs, tok_txt):
         self.pred.set_data(tok_abs + tok_txt)
         tags = self.pred.predict()
         return tags
 
-    def write_doc(self, path: str, data, doc):
-        with open(path, 'w', encoding="utf-8") as f:
-            json.dump({**data, **doc}, f)
-            
     def get_text_of(self, data):
 
         # raw text string
