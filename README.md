@@ -14,6 +14,7 @@ The program uses a pre-trained BioBERT model fine-tuned on GENETAG.
 5. Fine-tune BioBERT using huggingface's transformers library: https://github.com/huggingface/transformers/tree/master/examples/token-classification
 6. Download one of SpaCys tokenizers (for sentence tokenization) at https://allenai.github.io/scispacy/
 7. Now everything is set and you need to adjust the paths.
+
 IMPORTANT: To run this you need Nvidia CUDA!
 Tested on Ubuntu 20.04, RTX 2080, Ryzen 7 3700X this program needs about
 - 2250 MB on GPU for parent process and
